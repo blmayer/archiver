@@ -1,0 +1,4 @@
+#!/bin/sh
+
+gcc -Wall -g -c *.c
+gcc -Wall *.o -o archive
