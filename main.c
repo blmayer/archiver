@@ -14,15 +14,6 @@
  */
 
 #include "archiver.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-/* Global variables */
-char *INDEXFILE;
-char *ARCHIVE;
-FILE *idx;
-FILE *arch;
 
 void printHelp()
 {
