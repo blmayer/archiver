@@ -1,8 +1,17 @@
-#include "add.h"
+#include "archiver.h"
 
-int writeToArchive(char *filePath)
+int archiveFile(char *filePath)
 {
-	/* Check if file exists */
+	/* Check if needed files exists */
+	// TODO: Let user choose where to store the archive
+	arch = fopen(ARCHIVE, "a+b");
+
+	if (!arch) {
+		puts("Error opening archive file");
+		exit(-1);
+	}
+
+	/* Check if filePath exists */
 	FILE *file = fopen(filePath, "r");
 	if (!file) {
 		printf("Error: File \"%s\" not found.\n", filePath);
@@ -18,7 +27,8 @@ int writeToArchive(char *filePath)
 
 	/* Read some bytes of file into buffer */
 	unsigned char buffer[512];
-	long addr = ftell(arch);
+	fseek(arch, 0, SEEK_END);
+	long addrs[2] = {ftell(arch), 0};
 	int bytes;
 
 	do {
@@ -30,36 +40,17 @@ int writeToArchive(char *filePath)
 		puts("Wrote to archive");
 	} while (bytes == 512);
 
-	long file_len = ftell(arch) - addr;
+	fclose(file);
+	addrs[1] = ftell(arch) - addrs[0];
+	fclose(arch);
 
 	/* Resolve paths */
 	char *realPath = realpath(filePath, NULL);
+	printf("Real path: %s\n", realPath);
 
-	// TODO: Write addToIndex function to add an item to the index correctly
-	// addToIndex();
-
-	fclose(arch);
-	fclose(file);
-
-	return 0;
-}
-
-int archiveFile(char *file)
-{
-	/* Check if needed files exists */
-	// TODO: Let user choose where to store the archive
-	arch = fopen(ARCHIVE, "a+");
-	if (!arch) {
-		puts("Error opening archive file");
-		exit(-1);
-	}
-
-	int res = writeToArchive(file);
-	if (res) {
-		puts("Error writing file");
-	}
-	// TODO: Search in index file and check if file already exists
-	// TODO: Add file to archive
+	/* Update the index file */
+	struct item newFile = {realPath, addrs};
+	addToIndex(newFile);
 
 	return 0;
 }
