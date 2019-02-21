@@ -28,7 +28,7 @@ struct item {
 int archiveFile(char *file);
 
 /* Load all file entries from index file */
-struct index readIndex();
+int readIndex();
 
 /* Write an array of index files to index file */
 // int writeIndex(struct item index[]);
