@@ -22,11 +22,11 @@ void printHelp()
 	puts("Usage: archiver [command] FILE...");
 	puts("");
 	puts("Examples:");
-	puts("  archive doc.txt # Add file doc.txt to your archive");
+	puts("  archive doc.txt          # Add file doc.txt to your archive");
 	puts("");
 	puts("Available commands are:");
-	puts("  help:   show this help");
-	puts("  list:   list all files in the archive");
+	puts("  -h, --help, help:        show this help");
+	puts("  -l, list:                list all files in the archive");
 }
 
 int main(int argc, char *argv[])
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	/* At least one file or command must be passed */
 	if (argc < 2) {
 		printHelp();
-		exit(0);
+		return 0;
 	}
 
 	/* Command line argument parsing */
@@ -51,11 +51,16 @@ int main(int argc, char *argv[])
 		case -7:
 		case -59:
 			printHelp();
-			exit(0);
+			return 0;
+		case -63:
+		case -11:
+			return readIndex();
 		default:
 			/* Can be a file name */
 			archiveFile(*argv);
 			break;
 		}
 	}
+
+	return 0;
 }
