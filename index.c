@@ -4,52 +4,45 @@
  * Index file format
  *
  * This index is a text file using the format:
- * numOfFiles[4]
  * pathLen[2]path/to/file1numOfAddrs[2]addr1len1addr2len2...
  * pathLen[2]path/to/file1numOfAddrs[2]addr1len1addr2len2...
  * where addr is the position in the archive file
  */
 
-struct index readIndex()
+int readIndex()
 {
 	idx = fopen(INDEXFILE, "rb");
 	if (!idx) {
 		puts("Error opening index file");
-		exit(-1);
+		return -1;
 	}
 
-	/* Allocate the index structure */
-	static struct index fileIndex;
-	fscanf(idx, "%d\n", &fileIndex.len);
-
-	/* The second element is an array of length len */
-	fileIndex.items = malloc(fileIndex.len * sizeof(struct item));
-
 	/* Read the whole index */
-	for (int i = 0; i < fileIndex.len; i++) {
-		/* Read lengths */
-		short num, len;
-		fread(&len, 2, 1, idx);
-		fread(&num, 2, 1, idx);
-
-		/* Allocate name and array for intervals */
-		fileIndex.items[i].fileName = malloc(len + 1);
-		fileIndex.items[i].lengths = malloc(num * sizeof(long));
-
-		/* Read the file name */
-		fread(fileIndex.items[i].fileName, len, 1, idx);
-
-		/* Read address intervals */
-		for (short j = 0; j < num; j++) {
-			fread(&fileIndex.items[i].lengths[j], sizeof(long), 1,
-			      idx);
+	short nameLen, fileLen;
+	for (int i = 0; i < 3; i++) {
+		/* Read path length */
+		fread(&nameLen, 2, 1, idx);
+		if (nameLen < 0) {
+			break;
 		}
+
+		/* Print the file name */
+		printf("File: ");
+		while (nameLen--) {
+			printf("%c", fgetc(idx));
+		}
+
+		/* Read the files addresses to get length */
+		fread(&fileLen, 2, 1, idx); // Discard first value (#addresses)
+		fread(&fileLen, 2, 1, idx); // Discard 2nd value (address)
+		fread(&fileLen, 2, 1, idx);
+		printf(" length: %d bytes\n", fileLen);
 	}
 
 	/* Close all files */
 	fclose(idx);
 
-	return fileIndex;
+	return 0;
 }
 
 // int writeIndex(struct item *index)
