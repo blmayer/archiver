@@ -19,6 +19,8 @@ location to your path.
 
 ## Using
 
+You can take a look at the help by typing `archive help`.
+
 Type `archive <file>` to add the file to your archive.
 
 Type `archive get <file>` to print the file contents.
