@@ -23,10 +23,12 @@ void printHelp()
 	puts("");
 	puts("Examples:");
 	puts("  archive doc.txt          # Add file doc.txt to your archive");
+	puts("  archive get doc.txt      # Print doc.txt content to console");
 	puts("");
 	puts("Available commands are:");
 	puts("  -h, --help, help:        show this help");
 	puts("  -l, list:                list all files in the archive");
+	puts("  -g, get:                 print a file in the console");
 }
 
 int main(int argc, char *argv[])
@@ -55,6 +57,8 @@ int main(int argc, char *argv[])
 		case -63:
 		case -11:
 			return readIndex();
+		case -58:
+			return get(++argv);
 		default:
 			/* Can be a file name */
 			archiveFile(*argv);
