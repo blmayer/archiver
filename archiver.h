@@ -6,8 +6,8 @@
 #include <string.h>
 
 /* External variables */
-char *INDEXFILE;
-char *ARCHIVE;
+const char *INDEXFILE;
+const char *ARCHIVE;
 FILE *idx;
 FILE *arch;
 
@@ -25,16 +25,19 @@ struct item {
 
 /* Function signatures */
 
+/* Add a file to archive */
 int archiveFile(char *file);
 
 /* Load all file entries from index file */
 int readIndex();
 
 /* Write an array of index files to index file */
-// int writeIndex(struct item index[]);
 int writeIndex(struct index index);
 
 /* Add or update one item in the index file */
 int addToIndex(struct item item);
+
+/* Read a file's content */
+int get(char *args[]);
 
 #endif
