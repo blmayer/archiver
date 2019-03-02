@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 			return readIndex();
 		case -58:
 			/* Get */
-			return get(++argv);
+			return grepIndex(*++argv);
 		default:
 			/* Can be a file name */
 			archiveFile(*argv);

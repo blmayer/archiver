@@ -38,6 +38,6 @@ int writeIndex(struct index index);
 int addToIndex(struct item item);
 
 /* Read a file's content */
-int get(char *args[]);
+int grepIndex(char *arg);
 
 #endif
