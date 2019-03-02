@@ -4,8 +4,8 @@
  * Index file format
  *
  * This index is a text file using the format:
- * pathLen[2]path/to/file1numOfAddrs[2]addr1len1addr2len2...
- * pathLen[2]path/to/file1numOfAddrs[2]addr1len1addr2len2...
+ * path/to/file1\0numOfAddrs[2]addr1len1addr2len2...
+ * path/to/file1\0numOfAddrs[2]addr1len1addr2len2...
  * where addr is the position in the archive file
  */
 
@@ -18,25 +18,63 @@ int readIndex()
 	}
 
 	/* Read the whole index */
-	short nameLen, fileLen;
-	for (int i = 0; i < 3; i++) {
-		/* Read path length */
-		fread(&nameLen, 2, 1, idx);
-		if (nameLen < 0) {
+	short fileLen;
+	char c;
+	for (;;) {
+		/* Print the file name */
+		while ((c = fgetc(idx)) != 0) {
+			printf("%c", c);
+		}
+		puts("");
+
+		/* Discard first and second values */
+		fseek(idx, 6, SEEK_CUR);
+
+		/* Read now to get length */
+		fread(&fileLen, sizeof(long), 1, idx);
+		printf(" length: %d bytes\n", fileLen);
+	}
+
+	/* Close all files */
+	fclose(idx);
+
+	return 0;
+}
+
+int grepIndex(char *name)
+{
+	idx = fopen(INDEXFILE, "rb");
+	if (!idx) {
+		puts("Error opening index file");
+		return -1;
+	}
+
+	/* Read the whole index searching for name */
+	long addr, len = 0;
+	char c;
+	for (;;) {
+		/* Check if the file name matches */
+		while ((c = fgetc(idx)) == *name++) {
+			if (c == 0) {
+				/* File was found, print its contents */
+				fseek(idx, 2, SEEK_CUR);
+				fread(&addr, sizeof(long), 1, idx);
+				fread(&len, sizeof(long), 1, idx);
+
+				// TODO: Read archive at given add and print
+			}
+		}
+
+		/* Break if reached EOF */
+		if (c < 0) {
 			break;
 		}
 
-		/* Print the file name */
-		printf("File: ");
-		while (nameLen--) {
-			printf("%c", fgetc(idx));
+		/* jump to next file */
+		while (fgetc(idx) > 0) {
+			;
 		}
-
-		/* Read the files addresses to get length */
-		fread(&fileLen, 2, 1, idx); // Discard first value (#addresses)
-		fread(&fileLen, 2, 1, idx); // Discard 2nd value (address)
-		fread(&fileLen, 2, 1, idx);
-		printf(" length: %d bytes\n", fileLen);
+		fseek(idx, 10, SEEK_CUR);
 	}
 
 	/* Close all files */
@@ -75,7 +113,8 @@ int readIndex()
 
 // 		/* Write address intervals */
 // 		for (int n = 0; n < len; n++) {
-// 			fwrite((index + i)->lengths + n, sizeof(long), 1, idx);
+// 			fwrite((index + i)->lengths + n, sizeof(long), 1,
+// idx);
 // 		}
 // 	}
 
@@ -105,12 +144,8 @@ int addToIndex(struct item item)
 		exit(-1);
 	}
 
-	/* Write length of the file name */
-	short nameLen = (short)strlen(item.fileName);
-	fwrite(&nameLen, 2, 1, idx);
-
 	/* Write the file name */
-	fwrite(item.fileName, strlen(item.fileName), 1, idx);
+	fwrite(item.fileName, strlen(item.fileName) + 1, 1, idx);
 
 	/* Write the number of addresses */
 	// For now it's only 2
@@ -119,7 +154,7 @@ int addToIndex(struct item item)
 	// 	len++;
 	// }
 	short temp = 2;
-	fwrite(&temp, 2, 1, idx);
+	fwrite(&temp, sizeof(short), 1, idx);
 	printf("addrs lens: %ld %ld\n", item.lengths[0], item.lengths[1]);
 
 	/* Write address intervals */
@@ -127,8 +162,8 @@ int addToIndex(struct item item)
 	// for (int n = 0; n < len; n++) {
 	// 	fwrite(item.lengths + n, sizeof(long), 1, idx);
 	// }
-	fwrite(&item.lengths[0], 2, 1, idx);
-	fwrite(&item.lengths[1], 2, 1, idx);
+	fwrite(&item.lengths[0], sizeof(long), 1, idx);
+	fwrite(&item.lengths[1], sizeof(long), 1, idx);
 
 	fclose(idx);
 
