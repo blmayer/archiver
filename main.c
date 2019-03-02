@@ -19,7 +19,7 @@ void printHelp()
 {
 	puts("Archiver, an utility to store your files");
 	puts("");
-	puts("Usage: archiver [command] FILE...");
+	puts("Usage: archive [command] FILE...");
 	puts("");
 	puts("Examples:");
 	puts("  archive doc.txt          # Add file doc.txt to your archive");
@@ -28,7 +28,7 @@ void printHelp()
 	puts("Available commands are:");
 	puts("  -h, --help, help:        show this help");
 	puts("  -l, list:                list all files in the archive");
-	puts("  -g, get:                 print a file in the console");
+	puts("  -g, --get, get:          print a file in the console");
 }
 
 int main(int argc, char *argv[])
@@ -52,12 +52,15 @@ int main(int argc, char *argv[])
 		switch (strcmp("--arger", *argv)) {
 		case -7:
 		case -59:
+			/* Help */
 			printHelp();
 			return 0;
 		case -63:
 		case -11:
+			/* List */
 			return readIndex();
 		case -58:
+			/* Get */
 			return get(++argv);
 		default:
 			/* Can be a file name */
