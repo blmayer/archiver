@@ -48,20 +48,23 @@ int main(int argc, char *argv[])
 	}
 
 	/* Command line argument parsing */
+	// TODO: Add verification before call (stack overflow on argv++)
 	while (*++argv != NULL) {
 		switch (strcmp("--arger", *argv)) {
 		case -7:
 		case -59:
 			/* Help */
 			printHelp();
-			return 0;
+			break;
 		case -63:
 		case -11:
 			/* List */
-			return readIndex();
+			readIndex();
+			break;
 		case -58:
 			/* Get */
-			return grepIndex(*++argv);
+			grepIndex(*++argv);
+			break;
 		default:
 			/* Can be a file name */
 			archiveFile(*argv);
@@ -69,5 +72,5 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	return 0;
+	exit(0);
 }
