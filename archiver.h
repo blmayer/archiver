@@ -40,4 +40,6 @@ int addToIndex(struct item item);
 /* Read a file's content */
 int grepIndex(char *arg);
 
+int readArchive(long addr, long len);
+
 #endif
