@@ -1,4 +1,5 @@
 #include "archiver.h"
+#include <unistd.h>
 
 /*
  * Index file format
@@ -22,23 +23,23 @@ int readIndex()
 	char c;
 	for (;;) {
 		/* Print the file name */
-		while ((c = fgetc(idx)) != 0) {
+		do {
+			c = fgetc(idx);
+			if (c < 0) {
+				exit(0);
+			}
 			printf("%c", c);
-		}
-		puts("");
+		} while (c);
 
 		/* Discard first and second values */
-		fseek(idx, 6, SEEK_CUR);
+		fseek(idx, 10, SEEK_CUR);
 
 		/* Read now to get length */
 		fread(&fileLen, sizeof(long), 1, idx);
-		printf(" length: %d bytes\n", fileLen);
+		printf("\tlength: %d bytes\n", fileLen);
 	}
 
-	/* Close all files */
-	fclose(idx);
-
-	return 0;
+	exit(0);
 }
 
 int grepIndex(char *name)
@@ -50,31 +51,34 @@ int grepIndex(char *name)
 	}
 
 	/* Read the whole index searching for name */
+	// FIXME: Loop is not ok
 	long addr, len = 0;
 	char c;
-	for (;;) {
+	while ((c = fgetc(idx)) > -1) {
 		/* Check if the file name matches */
-		while ((c = fgetc(idx)) == *name++) {
-			if (c == 0) {
-				/* File was found, print its contents */
+		while (c > 0) {
+			if (c == *name++) {
+				/* File was found, save content location */
+				puts(" file found");
 				fseek(idx, 2, SEEK_CUR);
 				fread(&addr, sizeof(long), 1, idx);
 				fread(&len, sizeof(long), 1, idx);
-
-				// TODO: Read archive at given add and print
+				break;
+			} else {
+				/* jump to next file */
+				while (fgetc(idx) > 0) {
+					;
+				}
+				fseek(idx, 18, SEEK_CUR);
 			}
-		}
 
-		/* Break if reached EOF */
-		if (c < 0) {
-			break;
+			c = fgetc(idx);
 		}
+	}
 
-		/* jump to next file */
-		while (fgetc(idx) > 0) {
-			;
-		}
-		fseek(idx, 10, SEEK_CUR);
+	/* Print file contents if found */
+	if (len > 0) {
+		readArchive(addr, len);
 	}
 
 	/* Close all files */
