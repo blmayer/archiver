@@ -48,8 +48,10 @@ int grepIndex(char *arg);
 
 int readArchive(long addr, long len);
 
+/* Add a key-value pair to a map */
 int add(struct node *root, char *key, char *data);
 
+/* Retrieve the value from map with a key */
 char *get(struct node *root, char *key);
 
 #endif
