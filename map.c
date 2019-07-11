@@ -13,6 +13,11 @@ int add(struct node *root, char *key, char *data)
 		key++;
 	}
 
+	/* Free previous data */
+	if (curr->content) {
+		free(curr->content);
+	}
+
 	curr->content = malloc(strlen(data) + 1);
 	memcpy(curr->content, data, strlen(data) + 1);
 
@@ -23,7 +28,6 @@ char *get(struct node *root, char *key)
 {
 	struct node *curr = root;
 	while (*key) {
-		printf("curr %p\n", curr);
 		curr = curr->next[*key++ - 65];
 		if (!curr) {
 			return NULL;
