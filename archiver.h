@@ -23,6 +23,12 @@ struct item {
 	long *lengths;
 };
 
+/* node is part of the key table */
+struct node {
+	char *content;
+	struct node *next[57];
+};
+
 /* Function signatures */
 
 /* Add a file to archive */
@@ -41,5 +47,9 @@ int addToIndex(struct item item);
 int grepIndex(char *arg);
 
 int readArchive(long addr, long len);
+
+int add(struct node *root, char *key, char *data);
+
+char *get(struct node *root, char *key);
 
 #endif
