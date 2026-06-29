@@ -1,0 +1,108 @@
+#!/bin/sh
+# Simple integration test for paged common-sequence archiving.
+# Style matches ./build — plain shell, no framework.
+
+set -e
+
+cd "$(dirname "$0")"
+
+./build
+
+# Isolate archive files from the real home directory
+TMP=$(mktemp -d)
+export HOME="$TMP"
+ARCHIVE="$HOME/archive"
+INDEX="$HOME/archive.idx"
+DATA="$TMP/data"
+mkdir -p "$DATA"
+
+pass=0
+fail=0
+
+check() {
+	if "$@"; then
+		echo "PASS: $*"
+		pass=$((pass + 1))
+	else
+		echo "FAIL: $*"
+		fail=$((fail + 1))
+	fi
+}
+
+# --- fixtures --------------------------------------------------------------
+
+# Shared block longer than MIN_MATCH (32)
+SHARED=$(printf 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789common-sequence-block!!')
+# SHARED length is 54
+
+printf '%s%s\n' "$SHARED" "file-one-unique-tail" >"$DATA/one.txt"
+printf 'file-two-unique-head%s\n' "$SHARED" >"$DATA/two.txt"
+# Identical to one.txt — should reuse archive bytes entirely (or almost)
+cp "$DATA/one.txt" "$DATA/one_copy.txt"
+# Tiny file under MIN_MATCH — always stored as a literal
+printf 'tiny' >"$DATA/tiny.txt"
+
+# --- add files -------------------------------------------------------------
+
+./archive "$DATA/one.txt"
+size_after_one=$(wc -c <"$ARCHIVE" | tr -d ' ')
+
+./archive "$DATA/two.txt"
+size_after_two=$(wc -c <"$ARCHIVE" | tr -d ' ')
+
+./archive "$DATA/one_copy.txt"
+size_after_copy=$(wc -c <"$ARCHIVE" | tr -d ' ')
+
+./archive "$DATA/tiny.txt"
+size_after_tiny=$(wc -c <"$ARCHIVE" | tr -d ' ')
+
+echo "archive sizes: one=$size_after_one two=$size_after_two copy=$size_after_copy tiny=$size_after_tiny"
+
+# After adding two.txt, archive should grow by less than full two.txt because
+# SHARED is reused from one.txt
+two_full=$(wc -c <"$DATA/two.txt" | tr -d ' ')
+grew_two=$((size_after_two - size_after_one))
+check [ "$grew_two" -lt "$two_full" ]
+
+# Identical copy should not grow the archive (full reuse)
+check [ "$size_after_copy" -eq "$size_after_two" ]
+
+# tiny is new bytes
+check [ "$size_after_tiny" -gt "$size_after_copy" ]
+
+# --- get must reconstruct original content ---------------------------------
+
+./archive get "$DATA/one.txt" >"$TMP/out_one"
+check cmp -s "$DATA/one.txt" "$TMP/out_one"
+
+./archive get "$DATA/two.txt" >"$TMP/out_two"
+check cmp -s "$DATA/two.txt" "$TMP/out_two"
+
+./archive get "$DATA/one_copy.txt" >"$TMP/out_copy"
+check cmp -s "$DATA/one_copy.txt" "$TMP/out_copy"
+
+./archive get "$DATA/tiny.txt" >"$TMP/out_tiny"
+check cmp -s "$DATA/tiny.txt" "$TMP/out_tiny"
+
+# --- list ------------------------------------------------------------------
+
+./archive list >"$TMP/list.out"
+check grep -q one.txt "$TMP/list.out"
+check grep -q two.txt "$TMP/list.out"
+
+# --- index should mention multiple segments for two.txt --------------------
+# two.txt = unique head + shared block  => at least 2 segments when shared
+# was found.  We only check that the index file is non-empty and archive
+# reuse happened (sizes above).
+
+check [ -s "$INDEX" ]
+check [ -s "$ARCHIVE" ]
+
+echo ""
+echo "passed=$pass failed=$fail"
+rm -rf "$TMP"
+
+if [ "$fail" -ne 0 ]; then
+	exit 1
+fi
+exit 0

@@ -17,12 +17,3 @@ int readArchive(long addr, long len)
 	fclose(arch);
 	return 0;
 }
-
-int get(char *args[])
-{
-	while (*args) {
-		printf("arg: %s\n", *args++);
-	}
-
-	return 0;
-}

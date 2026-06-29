@@ -1,5 +1,5 @@
 #!/bin/sh
 
-gcc -Wall -g -c *.c
-gcc -Wall *.o -o archive
-rm *.o
+gcc -Wall -g -c add.c get.c index.c main.c map.c
+gcc -Wall add.o get.o index.o main.o map.o -o archive
+rm -f *.o
